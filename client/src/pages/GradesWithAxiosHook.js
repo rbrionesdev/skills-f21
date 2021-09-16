@@ -2,14 +2,11 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import SematicLoader from "../components/SemanticLoader";
 import SemanticLoadError from "../components/SemanticError";
+import useAxiosOnMount from "../hooks/useAxiosOnMount";
 
-export default function Grades() {
-  const [grades, setGrades] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  useEffect(() => {
-    getGrades();
-  }, []);
+export default function GradesWithAxiosHook() {
+  //{data:grades} desturcing data here and renaming it to grades
+  const { data: grades, loading, error } = useAxiosOnMount("/api/grades");
 
   const renderGrades = () => {
     if (loading) return <SematicLoader />;
@@ -32,20 +29,6 @@ export default function Grades() {
         </div>
       );
     });
-  };
-
-  const getGrades = async () => {
-    try {
-      // reset errot
-      setError(null);
-      let res = await axios.get("/api/grades");
-      setGrades(res.data);
-    } catch (err) {
-      setError(err);
-    } finally {
-      // finally block runs regaradless if successfull or not
-      setLoading(false);
-    }
   };
 
   return (
