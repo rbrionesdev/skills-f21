@@ -2,7 +2,7 @@ class Api::GradesController < ApplicationController
 
   def index
     grades = Grade.all_and_then_some
-    render json: grades
+     render json: grades
   end
 
   def create
