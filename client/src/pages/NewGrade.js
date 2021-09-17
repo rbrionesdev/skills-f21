@@ -1,56 +1,95 @@
-import axios from "axios";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
+import SematicLoader from "../components/SemanticLoader";
+import SemanticError from "../components/SemanticError";
 import useAxiosOnMount from "../hooks/useAxiosOnMount";
+import { Button, Form, Input, Select } from "semantic-ui-react";
+import axios from "axios";
 
+// Bonus create a dropdownloader
 export default function NewGrade() {
-  const [users, setUsers] = useState([]);
-  const [skills, setSkills] = useState([]);
-  const { data: usersYo, loading: usersLoading } =
-    useAxiosOnMount("/api/users");
-  const { data: skillsYo, loading: skillsLoading } =
-    useAxiosOnMount("/api/skills");
+  const [skillId, setSkillId] = useState(null);
+  const [userId, setUserId] = useState(null);
+  const [score, setScore] = useState(0);
+  const {
+    data: users,
+    loading: usersLoading,
+    error: uerr,
+  } = useAxiosOnMount("/api/users");
+  const {
+    data: skills,
+    loading: skillsLoading,
+    error: serr,
+  } = useAxiosOnMount("/api/skills");
 
-  useEffect(() => {
-    getData1();
-  }, []);
-
-  // use this way if you need the data for sunbsaquent api calls
-  const getData = async () => {
-    try {
-      console.log("before userRes,");
-      // we are awaiting for this to finish, so code stops right here
-      let usersRes = await axios.get("/api/users");
-      setUsers(usersRes.data);
-      let skillsRes = await axios.get("/api/skills");
-      setSkills(skillsRes.data);
-    } catch (err) {
-      console.log(err);
-    }
+  const handleChange = (e, { value }) => {
+    setUserId(value);
+  };
+  const handleSkillChange = (e, { value }) => {
+    setSkillId(value);
+  };
+  const handleSubmit = async () => {
+    let res = await axios.post("/api/grades", {
+      score,
+      skill_id: skillId,
+      user_id: userId,
+    });
   };
 
-  // use this way if you just need and they don't depend on each others
-  const getData1 = async () => {
-    try {
-      // we fire off both axios calls at the sametime
-      // but still await for them to all finsih
-      let obj = await axios.all([
-        axios.get("/api/users"),
-        axios.get("/api/skills"),
-      ]);
-      console.log("obj:", obj);
-      setUsers(obj[0].data);
-      setSkills(obj[1].data);
-    } catch (err) {
-      console.log(err);
+  const renderUsers = () => {
+    if (usersLoading) {
+      return <SematicLoader />;
     }
+    if (uerr) {
+      return <SemanticError error={uerr} />;
+    }
+    // we map data into options =>  { key: 'bj', value: 'bj', text: 'Benin' },
+    const usersOptions = users.map((u) => {
+      return { key: u.id, value: u.id, text: u.name };
+    });
+
+    return (
+      <Select
+        onChange={handleChange}
+        placeholder="Select User"
+        options={usersOptions}
+      />
+    );
   };
+
+  const renderSkills = () => {
+    if (skillsLoading) {
+      return <SematicLoader />;
+    }
+    if (serr) {
+      return <SemanticError error={serr} />;
+    }
+    // we map data into options =>  { key: 'bj', value: 'bj', text: 'Benin' },
+    const skillsOptions = skills.map((s) => {
+      return { key: s.id, value: s.id, text: s.name };
+    });
+
+    return (
+      <Select
+        onChange={handleSkillChange}
+        placeholder="Select Skill"
+        options={skillsOptions}
+      />
+    );
+  };
+
   return (
     <div>
       <h1>NewGrade</h1>
-      <p>users: {users.length}</p>
-      <p>skills: {skills.length}</p>
-      <p>{usersLoading ? "loading" : usersYo.length}</p>
-      <p>{skillsLoading ? "loading" : skillsYo.length}</p>
+      <Form onSubmit={handleSubmit}>
+        {renderUsers()}
+        {renderSkills()}
+        <Input
+          placeholder="enter score"
+          value={score}
+          onChange={(e, { value }) => setScore(value)}
+        />
+        <Button type={"submit"}>add</Button>
+      </Form>
     </div>
   );
 }
