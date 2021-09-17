@@ -1,7 +1,11 @@
 class Api::GradesController < ApplicationController
-
   def index
     grades = Grade.all_and_then_some
+     render json: grades
+  end
+
+  def tp_grades
+     grades = Grade.tp_grades
      render json: grades
   end
 
@@ -18,5 +22,6 @@ class Api::GradesController < ApplicationController
   private
   def grade_params
     params.require(:grade).permit(:score, :user_id, :skill_id)
+  end
   end
 end
